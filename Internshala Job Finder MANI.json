@@ -1,0 +1,319 @@
+{
+  "name": "Internshala Job Finder MANI",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        6064,
+        432
+      ],
+      "id": "0ef3787d-bbc6-4065-bb2c-dae7aec4af82",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "158c3bee-ca25-4cb0-8b9c-d7155a19f1a8",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        5840,
+        432
+      ],
+      "id": "ad3d0b68-5d84-497b-82c2-5521a7c9a24c",
+      "name": "Webhook",
+      "webhookId": "158c3bee-ca25-4cb0-8b9c-d7155a19f1a8"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        7888,
+        432
+      ],
+      "id": "42f2b2cf-c8a3-4beb-b6e2-6970bee52ad2",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        6584,
+        656
+      ],
+      "id": "5d9212b0-e0b8-40da-9ceb-5e1bc2a48190",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "yQD1pop8mRht6ikl",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "=Your task is to read the resume text and extract only 3 job role keywords that best match the candidate’s skills and experience with only 20 lines describing about it.\n\nRules:\n- Output must contain ONLY job role keywords.\n- No explanation, no sentences, no extra words.\n- Keep roles generic and commonly found in Internshala job listings.\n\nExample Output:\nFrontend Developer, Web Developer, UI/UX Intern\n\nResume:\n\n{{ $json.text }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"full_name\": \"string\",\n  \"email\": \"string\",\n  \"phone\": \"string\",\n  \n  \"education\": [\n    {\n      \"degree\": \"string\",\n      \"institution\": \"string\",\n      \"year\": \"string\"\n    }\n  ],\n\n  \"skills\": [\n    \"string\", \"string\", \"string\"\n  ],\n\n  \"experience\": [\n    {\n      \"job_title\": \"string\",\n      \"company\": \"string\",\n      \"duration\": \"string\",\n      \"responsibilities\": \"string\"\n    }\n  ],\n\n  \"projects\": [\n    {\n      \"project_title\": \"string\",\n      \"description\": \"string\",\n      \"tech_stack\": [\"string\", \"string\"]\n    }\n  ],\n\n  \"certifications\": [\n    {\n      \"certificate_name\": \"string\",\n      \"organization\": \"string\",\n      \"year\": \"string\"\n    }\n  ],\n\n  \"summary\": \"string\"\n}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        6512,
+        432
+      ],
+      "id": "b01cad86-98c6-495a-b4c3-d1356eb0a100",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://internshala.com/internships/' + encodeURIComponent($json.completion) + '-internship' }}",
+        "responseFormat": "string",
+        "options": {}
+      },
+      "id": "0c959d14-8808-4868-b495-b71591df2958",
+      "name": "Search Internshala",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        6864,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "text": "=You are given HTML code from an Internshala search results page. Your task is to extract individual internship listings with their titles and URLs.\n\nRules:\n- Extract each internship as a separate entry\n- For each internship, capture the title and the full URL\n- Output must be a JSON array with objects containing 'title' and 'url' fields\n- URLs should be complete and valid\n- Do NOT include any HTML tags or extra formatting\n- Only extract actual internship listings, ignore navigation or other page elements\n\nHere is the HTML content:\n\n{{ $json.data }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"internships\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"title\": {\n            \"type\": \"string\",\n            \"description\": \"The title of the internship\"\n          },\n          \"url\": {\n            \"type\": \"string\",\n            \"description\": \"The full URL to the internship listing\"\n          }\n        },\n        \"required\": [\"title\", \"url\"]\n      }\n    }\n  },\n  \"required\": [\"internships\"]\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        7088,
+        432
+      ],
+      "id": "bf3fb683-c15d-48dc-ba88-6205e3c63f3d",
+      "name": "Information Extractor1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        7160,
+        656
+      ],
+      "id": "ab2b1a33-353f-4bd1-a05b-7e5cad467d9f",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "yQD1pop8mRht6ikl",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "maxItems": 20
+      },
+      "id": "b3588725-e722-4acd-a83c-36ad3f3d955e",
+      "name": "Limit to 20 Items",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        7440,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "maxItems": 20
+      },
+      "id": "36e401dd-6662-441a-a33d-c40b58c0c430",
+      "name": "Limit to 20 Items1",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        6288,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const internships = $input.item.json.output.internships;\n\nif (!internships || internships.length === 0) {\n  return {\n    json: {\n      html: '<h3>Recommended Internships</h3><p>No internships found matching your profile.</p>'\n    }\n  };\n}\n\nlet formattedHtml = '<h3>Recommended Internships</h3><ul style=\"list-style-type: disc; padding-left: 20px;\">';\n\ninternships.forEach((internship) => {\n  formattedHtml += '<li style=\"margin-bottom: 10px;\">';\n  formattedHtml += '<strong>' + internship.title + '</strong><br>';\n  formattedHtml += '<a href=\"' + internship.url + '\" target=\"_blank\">' + internship.url + '</a>';\n  formattedHtml += '</li>';\n});\n\nformattedHtml += '</ul>';\n\nreturn {\n  json: {\n    html: formattedHtml\n  }\n};"
+      },
+      "id": "a3f89a84-b8cd-4c64-acaa-21db0b51c38c",
+      "name": "Convert to Plain Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7664,
+        432
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Search Internshala",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Internshala": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor1": {
+      "main": [
+        [
+          {
+            "node": "Limit to 20 Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Limit to 20 Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit to 20 Items1": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit to 20 Items": {
+      "main": [
+        [
+          {
+            "node": "Convert to Plain Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Plain Text": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e0313d96-eb21-4ba1-a57f-5ba578714553",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9a7b2d0fdc7bc9e995dd5ea8308da5a52dee655ad2d1f875cca7c1ac029be79f"
+  },
+  "id": "k3jCegzy55m9wLDm",
+  "tags": []
+}
